@@ -3,7 +3,7 @@
  */
 
 const Settings = (() => {
-  const APP_VERSION = '1.0.0';
+  const APP_VERSION = '1.0.1';
 
   const container = () => document.getElementById('settings-content');
 
