@@ -65,6 +65,7 @@ const Settings = (() => {
             <div class="settings-row-label">ListR</div>
             <div class="settings-row-sub">Version ${APP_VERSION}</div>
           </div>
+          <button class="btn btn-secondary btn-sm" id="update-btn">Check for updates</button>
         </div>
         <div class="settings-row">
           <div>
@@ -128,6 +129,26 @@ const Settings = (() => {
 
     // About
     document.getElementById('about-btn').addEventListener('click', _openAboutModal);
+
+    // Updates
+    document.getElementById('update-btn').addEventListener('click', async () => {
+      if ('serviceWorker' in navigator) {
+        try {
+          const reg = await navigator.serviceWorker.getRegistration();
+          if (reg) {
+            Toast.show('Checking for updates...', 'success');
+            await reg.update();
+            setTimeout(() => window.location.reload(), 1500);
+          } else {
+            Toast.show('App is not installed properly yet.', 'warn');
+          }
+        } catch (err) {
+          Toast.show('Update check failed.', 'error');
+        }
+      } else {
+        Toast.show('Offline mode not supported.', 'warn');
+      }
+    });
   }
 
   // ── Import Modal ──────────────────────────────────────────
