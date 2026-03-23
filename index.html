@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="system">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="ListR — Offline-first grocery shopping PWA" />
+
+  <!-- PWA Meta -->
+  <meta name="theme-color" content="#3b82f6" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="ListR" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="styles.css" />
+
+  <title>ListR</title>
+</head>
+<body>
+  <!-- App Shell -->
+  <div id="app">
+
+    <!-- Top Bar -->
+    <header id="top-bar">
+      <div id="top-bar-inner">
+        <h1 id="app-title">ListR</h1>
+        <div id="top-bar-actions">
+          <button id="search-toggle-btn" aria-label="Toggle search" class="icon-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <!-- Inline Search Bar (hidden by default) -->
+      <div id="search-bar" class="hidden">
+        <input type="search" id="search-input" placeholder="Search items…" aria-label="Search items" autocomplete="off" />
+        <button id="search-close-btn" aria-label="Close search" class="icon-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <!-- Offline Status Pill -->
+      <div id="status-pill" class="hidden" aria-live="polite"></div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main id="main-content">
+
+      <!-- Shopping Tab -->
+      <section id="tab-shopping" class="tab-panel active" role="tabpanel" aria-labelledby="nav-shopping">
+        <div id="shopping-content">
+          <!-- Rendered by shopping.js -->
+        </div>
+      </section>
+
+      <!-- Frequent Tab -->
+      <section id="tab-frequent" class="tab-panel" role="tabpanel" aria-labelledby="nav-frequent">
+        <div id="frequent-content">
+          <!-- Rendered by frequent.js -->
+        </div>
+      </section>
+
+      <!-- History Tab -->
+      <section id="tab-history" class="tab-panel" role="tabpanel" aria-labelledby="nav-history">
+        <div id="history-content">
+          <!-- Rendered by history.js -->
+        </div>
+      </section>
+
+      <!-- Settings Tab -->
+      <section id="tab-settings" class="tab-panel" role="tabpanel" aria-labelledby="nav-settings">
+        <div id="settings-content">
+          <!-- Rendered by settings.js -->
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav id="bottom-nav" role="tablist" aria-label="Main navigation">
+      <button id="nav-shopping" class="nav-btn active" role="tab" aria-selected="true" aria-controls="tab-shopping" data-tab="shopping">
+        <span class="nav-icon" aria-hidden="true">🛒</span>
+        <span class="nav-label">Shopping</span>
+      </button>
+      <button id="nav-frequent" class="nav-btn" role="tab" aria-selected="false" aria-controls="tab-frequent" data-tab="frequent">
+        <span class="nav-icon" aria-hidden="true">⭐</span>
+        <span class="nav-label">Frequent</span>
+      </button>
+      <button id="nav-history" class="nav-btn" role="tab" aria-selected="false" aria-controls="tab-history" data-tab="history">
+        <span class="nav-icon" aria-hidden="true">🕐</span>
+        <span class="nav-label">History</span>
+      </button>
+      <button id="nav-settings" class="nav-btn" role="tab" aria-selected="false" aria-controls="tab-settings" data-tab="settings">
+        <span class="nav-icon" aria-hidden="true">⚙️</span>
+        <span class="nav-label">Settings</span>
+      </button>
+    </nav>
+
+  </div><!-- /#app -->
+
+  <!-- Toast Container -->
+  <div id="toast-container" aria-live="assertive" aria-atomic="true"></div>
+
+  <!-- Install Prompt Banner -->
+  <div id="install-banner" class="hidden" role="complementary" aria-label="Install app">
+    <div id="install-banner-inner">
+      <img src="icons/icon-192.png" alt="" width="40" height="40" />
+      <div id="install-banner-text">
+        <strong>Add ListR to Home Screen</strong>
+        <span>Works offline — like a native app!</span>
+      </div>
+      <button id="install-btn" class="btn btn-primary">Install</button>
+      <button id="install-dismiss-btn" class="icon-btn" aria-label="Dismiss">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- iOS Install Instruction Banner -->
+  <div id="ios-install-banner" class="hidden" role="complementary" aria-label="iOS install instructions">
+    <div id="ios-install-banner-inner">
+      <span>Tap <strong>Share</strong> then <strong>"Add to Home Screen"</strong> to install ListR.</span>
+      <button id="ios-install-dismiss-btn" class="icon-btn" aria-label="Dismiss">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal Overlay -->
+  <div id="modal-overlay" class="hidden" role="dialog" aria-modal="true" aria-label="Dialog">
+    <div id="modal-container">
+      <!-- Modal content injected here by JS -->
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="db.js"></script>
+  <script src="utils/theme.js"></script>
+  <script src="utils/csv.js"></script>
+  <script src="utils/drag-drop.js"></script>
+  <script src="utils/swipe.js"></script>
+  <script src="components/toast.js"></script>
+  <script src="components/picker-modal.js"></script>
+  <script src="components/shopping.js"></script>
+  <script src="components/frequent.js"></script>
+  <script src="components/history.js"></script>
+  <script src="components/settings.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

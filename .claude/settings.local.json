@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c \"from PIL import Image; img = Image.open\\(''/c/Users/yahoo/PythtonCode/listr/listr.png''\\); img.resize\\(\\(192,192\\), Image.LANCZOS\\).save\\(''/c/Users/yahoo/PythtonCode/listr/icons/icon-192.png''\\); img.resize\\(\\(512,512\\), Image.LANCZOS\\).save\\(''/c/Users/yahoo/PythtonCode/listr/icons/icon-512.png''\\); print\\(''Icons created''\\)\")",
+      "Bash(python -c \"from PIL import Image; img = Image.open\\(''/c/Users/yahoo/PythtonCode/listr/listr.png''\\); img.resize\\(\\(192,192\\), Image.LANCZOS\\).save\\(''/c/Users/yahoo/PythtonCode/listr/icons/icon-192.png''\\); img.resize\\(\\(512,512\\), Image.LANCZOS\\).save\\(''/c/Users/yahoo/PythtonCode/listr/icons/icon-512.png''\\); print\\(''Icons created''\\)\")",
+      "Bash(pip install:*)",
+      "Bash(python -c \":*)"
+    ]
+  }
+}

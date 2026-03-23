@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ListR</title>
+  <script>
+    // GitHub Pages 404 redirect: send any unknown path back to index.html.
+    // The service worker will take over from there once installed.
+    const base = location.pathname.split('/').slice(0, 2).join('/'); // e.g. /listr
+    location.replace(base + '/' + location.search + location.hash);
+  </script>
+</head>
+<body></body>
+</html>
