@@ -314,6 +314,7 @@ const Shopping = (() => {
     });
 
     document.getElementById('nl-import-btn').addEventListener('click', async () => {
+      const listName = getName();
       close();
       const [lists, items] = await Promise.all([
         DB.getAll('frequentLists'),
@@ -321,7 +322,7 @@ const Shopping = (() => {
       ]);
       const selectedNames = await PickerModal.open(lists, items);
       if (selectedNames !== null) {
-        await _createNewList(getName(), selectedNames);
+        await _createNewList(listName, selectedNames);
       }
     });
 

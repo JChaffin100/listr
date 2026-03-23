@@ -59,6 +59,11 @@
       document.getElementById('search-input').value = '';
       Shopping.setSearch('');
     }
+
+    // Refresh tab data when switching
+    if (tabName === 'history') History.init();
+    if (tabName === 'frequent') Frequent.init();
+    if (tabName === 'shopping') Shopping.init();
   }
 
   navBtns.forEach((btn) => {
@@ -69,8 +74,6 @@
   document.addEventListener('navigate', (e) => {
     const { tab } = e.detail;
     activateTab(tab);
-    // Reload shopping tab after duplicate-to-new
-    if (tab === 'shopping') Shopping.init();
   });
 
   // Reload all tabs after CSV import
