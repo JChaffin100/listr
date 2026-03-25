@@ -1,5 +1,5 @@
 // Change CACHE_NAME to force the service worker to update its cached files
-const CACHE_NAME = 'listr-v2';
+const CACHE_NAME = 'listr-v3';
 
 const ASSETS_TO_CACHE = [
   './',
@@ -51,13 +51,6 @@ self.addEventListener('fetch', (event) => {
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
         return cachedResponse;
-      }
-
-      // For navigation requests (directory URLs like /listr/), also try index.html
-      // This handles the GitHub Pages subpath case where the cached key is ./index.html
-      if (event.request.mode === 'navigate') {
-        const indexMatch = caches.match('./index.html');
-        if (indexMatch) return indexMatch;
       }
 
       return fetch(event.request).then((networkResponse) => {
