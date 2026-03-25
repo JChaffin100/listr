@@ -27,6 +27,7 @@
 2. Look for the **"Add to Home Screen"** banner that appears, or tap the browser menu (⋮) → **"Add to Home Screen"** / **"Install app"**.
 3. Tap **Install**. ListR will appear on your home screen like a native app.
 
+
 ### iOS (Safari)
 
 > Chrome and other browsers on iOS currently do not support PWA installation. Use **Safari**.
