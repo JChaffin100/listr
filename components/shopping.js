@@ -1,11 +1,16 @@
 /**
- * components/shopping.js — Shopping (active weekly list) tab
+ * components/shopping.js — Shopping tab (multiple active lists)
+ *
+ * Two-level view:
+ *   Index  — shows all active lists; drag to reorder; tap to open
+ *   Detail — the open list, with items, add-bar, back button
  */
 
 const Shopping = (() => {
-  let _list    = null;   // current active weeklyList record
-  let _items   = [];     // weeklyItems for the active list
-  let _searchQ = '';     // current search filter
+  let _lists   = [];   // all active weeklyLists, ordered by list.order
+  let _list    = null; // currently open weeklyList record (null = index view)
+  let _items   = [];   // weeklyItems for _list
+  let _searchQ = '';   // current search filter (only used in detail view)
   let _allFrequentItems = []; // for autocomplete
 
   const container = () => document.getElementById('shopping-content');
@@ -14,11 +19,22 @@ const Shopping = (() => {
 
   async function init() {
     await _load();
+    // If _list was already set (tab re-activation), keep detail view open
+    // but refresh from the freshly loaded _lists array.
+    if (_list) {
+      const refreshed = _lists.find((l) => l.id === _list.id);
+      _list = refreshed || null;
+      if (_list) {
+        _items = await DB.getAllByIndex('weeklyItems', 'listId', _list.id);
+        _items.sort((a, b) => a.order - b.order);
+      }
+    }
     _render();
     _bindSearch();
   }
 
   function setSearch(q) {
+    if (!_list) return; // no-op on index view
     _searchQ = q.toLowerCase();
     _renderItems();
   }
@@ -26,10 +42,10 @@ const Shopping = (() => {
   // ── Data loading ──────────────────────────────────────────
 
   async function _load() {
-    const allLists  = await DB.getAll('weeklyLists');
-    _list = allLists.find((l) => l.status === 'active') || null;
-    _items = _list ? await DB.getAllByIndex('weeklyItems', 'listId', _list.id) : [];
-    _items.sort((a, b) => a.order - b.order);
+    const allLists = await DB.getAll('weeklyLists');
+    _lists = allLists
+      .filter((l) => l.status === 'active')
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     await _loadFrequentItems();
   }
 
@@ -41,23 +57,122 @@ const Shopping = (() => {
 
   function _render() {
     if (!_list) {
-      _renderEmpty();
+      _renderIndex();
     } else {
       _renderList();
     }
   }
 
-  function _renderEmpty() {
+  // ── INDEX VIEW ────────────────────────────────────────────
+
+  function _renderIndex() {
+    if (_lists.length === 0) {
+      container().innerHTML = `
+        <div class="empty-state" style="margin-top:48px;">
+          <div class="empty-state-icon">🛒</div>
+          <div class="empty-state-title">No active shopping lists</div>
+          <div class="empty-state-subtitle">Tap "New List" to start shopping.</div>
+          <button class="btn btn-primary" id="new-list-btn-empty">New List</button>
+        </div>
+      `;
+      document.getElementById('new-list-btn-empty').addEventListener('click', _openNewListModal);
+      return;
+    }
+
     container().innerHTML = `
-      <div class="empty-state" style="margin-top:48px;">
-        <div class="empty-state-icon">🛒</div>
-        <div class="empty-state-title">No active shopping list</div>
-        <div class="empty-state-subtitle">Tap "New List" to start your weekly shop.</div>
-        <button class="btn btn-primary" id="new-list-btn-empty">New List</button>
+      <div class="shopping-index-header">
+        <div style="font-size:13px;color:var(--color-text-muted);">
+          ${_lists.length} active list${_lists.length !== 1 ? 's' : ''}
+        </div>
+        <button class="btn btn-primary btn-sm" id="new-list-btn-index">New List</button>
+      </div>
+      <div id="shopping-index-list">
+        ${_lists.map((list) => _renderIndexItemHtml(list)).join('')}
       </div>
     `;
-    document.getElementById('new-list-btn-empty').addEventListener('click', _openNewListModal);
+
+    document.getElementById('new-list-btn-index').addEventListener('click', _openNewListModal);
+    _bindIndexEvents();
+    _setupIndexDragDrop();
   }
+
+  function _renderIndexItemHtml(list) {
+    // We don't have item counts cached here — they'll show as 0 until
+    // the user opens the list. For a richer index we'd need counts stored
+    // on the list record; for now show a simple card with name + created date.
+    const created = _fmtDate(list.createdAt);
+    return `
+      <div class="shopping-index-item" data-list-id="${list.id}"
+           role="button" tabindex="0" aria-label="Open ${escHtml(list.name)}">
+        <span class="drag-handle shopping-index-drag" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="8" y1="6" x2="21" y2="6"/>
+            <line x1="8" y1="12" x2="21" y2="12"/>
+            <line x1="8" y1="18" x2="21" y2="18"/>
+            <line x1="3" y1="6" x2="3.01" y2="6"/>
+            <line x1="3" y1="12" x2="3.01" y2="12"/>
+            <line x1="3" y1="18" x2="3.01" y2="18"/>
+          </svg>
+        </span>
+        <div class="shopping-index-item-body">
+          <div class="shopping-index-item-name">${escHtml(list.name)}</div>
+          <div class="shopping-index-item-meta">Created ${created}</div>
+        </div>
+        <svg class="shopping-index-chevron" width="16" height="16" viewBox="0 0 24 24"
+          fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </div>
+    `;
+  }
+
+  function _bindIndexEvents() {
+    const indexList = document.getElementById('shopping-index-list');
+    if (!indexList) return;
+
+    indexList.querySelectorAll('.shopping-index-item').forEach((el) => {
+      el.addEventListener('click', (e) => {
+        // Don't open if user clicked the drag handle
+        if (e.target.closest('.shopping-index-drag')) return;
+        _openList(el.dataset.listId);
+      });
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          _openList(el.dataset.listId);
+        }
+      });
+    });
+  }
+
+  function _setupIndexDragDrop() {
+    const indexList = document.getElementById('shopping-index-list');
+    if (!indexList) return;
+    DragDrop.enable(indexList, {
+      itemSelector: '.shopping-index-item',
+      handleSelector: '.shopping-index-drag',
+      onReorder: async (from, to) => {
+        const moved = _lists.splice(from, 1)[0];
+        _lists.splice(to, 0, moved);
+        _lists.forEach((list, idx) => { list.order = idx; });
+        await DB.putMany('weeklyLists', _lists);
+      },
+    });
+  }
+
+  async function _openList(listId) {
+    const list = _lists.find((l) => l.id === listId);
+    if (!list) return;
+    _list  = list;
+    _items = await DB.getAllByIndex('weeklyItems', 'listId', listId);
+    _items.sort((a, b) => a.order - b.order);
+    _searchQ = '';
+    _render();
+  }
+
+  // ── DETAIL VIEW ───────────────────────────────────────────
 
   function _renderList() {
     const total     = _items.length;
@@ -65,6 +180,17 @@ const Shopping = (() => {
     const pct       = total === 0 ? 0 : Math.round((purchased / total) * 100);
 
     container().innerHTML = `
+      <div class="shopping-detail-header">
+        <button class="back-btn" id="shopping-back-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+          Lists
+        </button>
+        <button class="btn btn-secondary btn-sm" id="new-list-btn-top">New List</button>
+      </div>
+
       <div class="shopping-header">
         <input
           class="list-name-editable"
@@ -73,7 +199,6 @@ const Shopping = (() => {
           aria-label="List name"
           spellcheck="false"
         />
-        <button class="btn btn-secondary btn-sm" id="new-list-btn-top">New List</button>
       </div>
 
       ${total > 0 ? `
@@ -162,6 +287,12 @@ const Shopping = (() => {
   // ── Event binding ─────────────────────────────────────────
 
   function _bindListEvents() {
+    document.getElementById('shopping-back-btn').addEventListener('click', () => {
+      _list    = null;
+      _searchQ = '';
+      _render();
+    });
+
     document.getElementById('new-list-btn-top').addEventListener('click', _openNewListModal);
     document.getElementById('clear-purchased-btn').addEventListener('click', _clearPurchased);
     document.getElementById('finish-archive-btn').addEventListener('click', _finishAndArchive);
@@ -199,7 +330,6 @@ const Shopping = (() => {
     const ul = document.getElementById('shopping-items');
     if (!ul) return;
 
-    // Toggle purchased via checkbox or item tap
     ul.querySelectorAll('.item-checkbox, .item-name').forEach((el) => {
       el.addEventListener('click', async (e) => {
         const li = e.target.closest('.list-item');
@@ -227,7 +357,6 @@ const Shopping = (() => {
         const visible = _searchQ ? _items.filter((i) => i.name.toLowerCase().includes(_searchQ)) : _items;
         const moved   = visible.splice(from, 1)[0];
         visible.splice(to, 0, moved);
-        // Re-assign order across all items (not just visible)
         if (!_searchQ) {
           _items = visible;
         }
@@ -334,25 +463,19 @@ const Shopping = (() => {
   }
 
   async function _createNewList(name, itemNames) {
-    // Archive current active list if any
-    if (_list) {
-      _list.status     = 'archived';
-      _list.archivedAt = new Date().toISOString();
-      await DB.put('weeklyLists', _list);
-    }
+    // Assign the new list an order after the current last list
+    const maxOrder = _lists.reduce((m, l) => Math.max(m, l.order ?? 0), -1);
 
-    // Create new list
     const newList = {
       id:         DB.uuid(),
       name:       name,
       status:     'active',
-      order:      0,
+      order:      maxOrder + 1,
       createdAt:  new Date().toISOString(),
       archivedAt: null,
     };
     await DB.put('weeklyLists', newList);
 
-    // Add items
     const newItems = itemNames.map((itemName, idx) => ({
       id:        DB.uuid(),
       listId:    newList.id,
@@ -362,8 +485,11 @@ const Shopping = (() => {
     }));
     if (newItems.length > 0) await DB.putMany('weeklyItems', newItems);
 
+    // Add to local state and open in detail view
+    _lists.push(newList);
     _list  = newList;
     _items = newItems;
+    _searchQ = '';
     _render();
     Toast.show('New list created!', 'success');
   }
@@ -385,7 +511,6 @@ const Shopping = (() => {
     const name = input.value.trim();
     if (!name) return;
 
-    // Check duplicate
     const exists = _items.some((i) => i.name.toLowerCase() === name.toLowerCase());
     if (exists) {
       Toast.show(`"${name}" is already on the list.`, 'warn');
@@ -439,15 +564,18 @@ const Shopping = (() => {
   async function _finishAndArchive() {
     if (!_list) return;
     _openConfirm(
-      'Archive this list and clear the Shopping tab?',
+      'Archive this list?',
       '📦',
       'Archive',
       async () => {
         _list.status     = 'archived';
         _list.archivedAt = new Date().toISOString();
         await DB.put('weeklyLists', _list);
+        // Remove from active lists and return to index
+        _lists = _lists.filter((l) => l.id !== _list.id);
         _list  = null;
         _items = [];
+        _searchQ = '';
         _render();
         Toast.show('List archived.', 'success');
       }
@@ -548,6 +676,13 @@ const Shopping = (() => {
 
     overlay.classList.remove('hidden');
     requestAnimationFrame(() => document.getElementById('conf-confirm-btn')?.focus());
+  }
+
+  // ── Helpers ───────────────────────────────────────────────
+
+  function _fmtDate(iso) {
+    if (!iso) return '';
+    return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
 
   function escHtml(str) {

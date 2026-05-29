@@ -187,20 +187,16 @@ const History = (() => {
   }
 
   async function _duplicateToNew(sourceList, sourceItems) {
-    // Archive current active list if any
-    const allLists  = await DB.getAll('weeklyLists');
-    const activeList = allLists.find((l) => l.status === 'active');
-    if (activeList) {
-      activeList.status     = 'archived';
-      activeList.archivedAt = new Date().toISOString();
-      await DB.put('weeklyLists', activeList);
-    }
+    // Determine order for the new list (after any existing active lists)
+    const allLists   = await DB.getAll('weeklyLists');
+    const activeLists = allLists.filter((l) => l.status === 'active');
+    const maxOrder   = activeLists.reduce((m, l) => Math.max(m, l.order ?? 0), -1);
 
     const newList = {
       id:         DB.uuid(),
       name:       sourceList.name,
       status:     'active',
-      order:      0,
+      order:      maxOrder + 1,
       createdAt:  new Date().toISOString(),
       archivedAt: null,
     };

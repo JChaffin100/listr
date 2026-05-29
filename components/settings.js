@@ -3,7 +3,7 @@
  */
 
 const Settings = (() => {
-  const APP_VERSION = '1.0.1';
+  const APP_VERSION = '1.0.2';
 
   const container = () => document.getElementById('settings-content');
 
@@ -119,7 +119,7 @@ const Settings = (() => {
       e.target.value = ''; // reset so same file can be re-selected
 
       try {
-        const text   = await file.text();
+        const text = await file.text();
         const parsed = CSV.parseImport(text);
         _openImportModal(parsed);
       } catch (err) {
@@ -154,7 +154,7 @@ const Settings = (() => {
   // ── Import Modal ──────────────────────────────────────────
 
   function _openImportModal(parsed) {
-    const overlay   = document.getElementById('modal-overlay');
+    const overlay = document.getElementById('modal-overlay');
     const modalCont = document.getElementById('modal-container');
     const { summary } = parsed;
     let mode = 'merge'; // 'merge' | 'replace'
@@ -219,7 +219,7 @@ const Settings = (() => {
         document.removeEventListener('keydown', onKey);
         overlay.removeEventListener('click', onOverlay);
       }
-      function onKey(e)     { if (e.key === 'Escape') close(); }
+      function onKey(e) { if (e.key === 'Escape') close(); }
       function onOverlay(e) { if (e.target === overlay) close(); }
 
       document.getElementById('imp-close-btn').addEventListener('click', close);
@@ -252,7 +252,7 @@ const Settings = (() => {
   // ── About Modal ───────────────────────────────────────────
 
   function _openAboutModal() {
-    const overlay   = document.getElementById('modal-overlay');
+    const overlay = document.getElementById('modal-overlay');
     const modalCont = document.getElementById('modal-container');
 
     modalCont.innerHTML = `
@@ -301,7 +301,7 @@ const Settings = (() => {
       document.removeEventListener('keydown', onKey);
       overlay.removeEventListener('click', onOverlay);
     }
-    function onKey(e)     { if (e.key === 'Escape') close(); }
+    function onKey(e) { if (e.key === 'Escape') close(); }
     function onOverlay(e) { if (e.target === overlay) close(); }
 
     document.getElementById('about-close-btn').addEventListener('click', close);

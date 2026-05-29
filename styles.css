@@ -717,6 +717,92 @@ ul, ol {
   text-align: right;
 }
 
+/* Shopping index (multi-list) */
+.shopping-index-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding-bottom: var(--space-xs);
+}
+
+#shopping-index-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.shopping-index-item {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  cursor: pointer;
+  transition: background var(--transition-fast), box-shadow var(--transition-fast);
+  user-select: none;
+  touch-action: pan-y;
+}
+
+.shopping-index-item:hover {
+  background: var(--color-surface-2);
+  box-shadow: var(--shadow-sm);
+}
+
+.shopping-index-item.dragging {
+  opacity: .5;
+  box-shadow: var(--shadow-lg);
+  z-index: 100;
+}
+
+.shopping-index-item.drag-over {
+  border-top: 2px solid var(--color-primary);
+}
+
+.shopping-index-drag {
+  /* inherits .drag-handle styles */
+  flex-shrink: 0;
+}
+
+.shopping-index-item-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.shopping-index-item-name {
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.shopping-index-item-meta {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.shopping-index-chevron {
+  flex-shrink: 0;
+  color: var(--color-text-disabled);
+}
+
+/* Shopping detail back-button row */
+.shopping-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+
+
 /* ── Frequent Tab ───────────────────────────────────────────── */
 #frequent-content {
   padding: var(--space-md);
