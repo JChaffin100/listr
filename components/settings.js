@@ -132,21 +132,39 @@ const Settings = (() => {
 
     // Updates
     document.getElementById('update-btn').addEventListener('click', async () => {
-      if ('serviceWorker' in navigator) {
-        try {
-          const reg = await navigator.serviceWorker.getRegistration();
-          if (reg) {
-            Toast.show('Checking for updates...', 'success');
-            await reg.update();
-            setTimeout(() => window.location.reload(), 1500);
-          } else {
-            Toast.show('App is not installed properly yet.', 'warn');
-          }
-        } catch (err) {
-          Toast.show('Update check failed.', 'error');
+      if (!('serviceWorker' in navigator)) {
+        Toast.show('This browser does not support PWA updates.', 'warn');
+        return;
+      }
+      try {
+        const reg = await navigator.serviceWorker.getRegistration();
+        if (!reg) {
+          Toast.show('App is not installed as a PWA yet.', 'warn');
+          return;
         }
-      } else {
-        Toast.show('Offline mode not supported.', 'warn');
+
+        Toast.show('Checking for updates…', 'success');
+
+        // Reload the moment the new SW takes control — this guarantees
+        // the page loads the freshly-cached files, not the old ones.
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          window.location.reload();
+        }, { once: true });
+
+        // Ask the browser to re-fetch the SW script and compare it.
+        // Resolves once the check is done (new SW may be installing).
+        const updatedReg = await reg.update();
+
+        if (updatedReg.installing || updatedReg.waiting) {
+          // A new SW was found and is installing; controllerchange will
+          // fire automatically once it activates (skipWaiting is in the SW).
+          Toast.show('Update found — applying now…', 'success');
+        } else {
+          // No new SW — already on the latest version.
+          Toast.show('Already up to date! ✓', 'success');
+        }
+      } catch (err) {
+        Toast.show('Update check failed.', 'error');
       }
     });
   }

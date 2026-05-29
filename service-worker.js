@@ -1,5 +1,5 @@
 // Change CACHE_NAME to force the service worker to update its cached files
-const CACHE_NAME = 'listr-v3';
+const CACHE_NAME = 'listr-v4';
 
 const ASSETS_TO_CACHE = [
   './',
